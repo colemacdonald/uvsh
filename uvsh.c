@@ -240,7 +240,6 @@ int fork_exec(char * binary, char ** args, int num_tokens)
 		args[0] = binary;
 		args[num_tokens] = 0;
 
-		printf("%s\n", binary);
 		if(execve(args[0], args, envp) == -1)
 		{
 			fprintf(stderr, "Error: execve failed.\n");
@@ -266,8 +265,6 @@ int fork_exec_out(char * binary, char ** args, int num_tokens, char * output)
 			fprintf(stderr, "Cannot open output file for writing.\n");
 			return 0;
 		}
-
-		printf("%s\n", binary);
 
 		// redirect stdout and stderr respectively
 		dup2(fd, 1);
