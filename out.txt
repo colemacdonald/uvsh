@@ -1,5 +1,8 @@
+.
+..
+.git
+.uvshrc
 README.md
-a.out
 appendix_a.c
 appendix_b.c
 appendix_c.c
@@ -7,6 +10,5 @@ appendix_d.c
 appendix_e.c
 makefile
 out.txt
-output.txt
 uvsh
 uvsh.c

@@ -44,6 +44,7 @@ int 		run_cmd(char* cmd);
 int 		tokenize_cmd(char ** token, char * cmd);
 int 		fork_exec(char * binary, char ** args, int num_tokens);
 int 		fork_exec_out(char * binary, char ** args, int num_tokens, char * output);
+int 		fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2);
 int 		run_out(char * cmd);
 int 		run_pipe(char * cmd);
 int 		find_binary(char * bin_name, char * fullpath);
@@ -124,29 +125,7 @@ int run_cmd(char* cmd)
 	if(strncmp(cmd, "do-pipe", 7) == 0)
 	{
 		//handle pipe
-		/*num_cmds = 2;
-
-		//find ::
-		int i;
-		for(i = 1; i < num_tokens; i++)
-		{
-			if(strcmp(token[i], "::") == 0)
-				break;
-		}
-
-		char *token1[i-1];
-		char *token2[num_tokens - i];
-
-		int j;
-		for(j = 1; j < i; j++)
-			token1[j-1] = token[j];
-
-		for(j = i + 1; j < num_tokens; j++)
-			token2[j] = token[j];
-	
-		cmds[0] = token1;
-		cmds[1] = token2;*/
-		return 1;
+		return run_pipe(cmd);
 	}
 	if(strncmp(cmd, "do-out", 6) == 0)
 	{
@@ -193,9 +172,9 @@ int run_out(char * cmd)
 	int i;
 	for(i = 1; i < num_tokens - 2; i++)
 	{
-		token1[i - 1] = token[1];
+		token1[i - 1] = token[i];
 	}
-	token1[num_tokens - 2] = NULL;
+	token1[num_tokens - 3] = NULL;
 
 	char * output = token[num_tokens - 1];
 	num_tokens -= 3;
@@ -212,6 +191,68 @@ int run_out(char * cmd)
 		return 0;
 	}
 	return 1;
+}
+
+int run_pipe(char * cmd)
+{
+	char *token[MAX_NUM_ARGS];
+	int num_tokens = tokenize_cmd(token, cmd);
+
+	//find ::
+	int i;
+	for(i = 1; i < num_tokens; i++)
+	{
+		if(strcmp(token[i], "::") == 0)
+			break;
+	}
+
+	printf("%d\n", i);
+
+	char *token1[i];
+	char *token2[num_tokens - i + 1];
+
+	int j;
+	for(j = 1; j < i; j++)
+		token1[j-1] = token[j];
+	token1[i - 1] = 0;
+
+	for(j = i + 1; j < num_tokens; j++)
+		token2[j - (i + 1)] = token[j];
+	token2[num_tokens - i] = 0;
+	
+	// int k = 0;
+	// while(k < num_tokens)
+	// {
+	// 	printf("%d: %s\n", k, token[k]);
+	// 	k++;
+	// }
+
+	// k = 0;
+	// while(token1[k] != 0)
+	// {
+	// 	printf("%d: %s\n", k, token1[k]);
+	// 	k++;
+	// }
+	// k = 0;
+	// while(token2[k] != 0)
+	// {
+	// 	printf("%d: %s\n", k, token2[k]);
+	// 	k++;
+	// }
+
+	char binary1[MAX_LINE_LENGTH];
+	char binary2[MAX_LINE_LENGTH];
+
+	int found_binary1 = find_binary(token1[0], binary1);
+	int found_binary2 = find_binary(token2[0], binary2);
+
+	if(!found_binary1 || !found_binary2)
+	{
+		fprintf(stderr, "Invalid command.");
+		return 0;
+	}
+
+	return fork_exec_pipe(binary1, token1, binary2, token2);
 }
 
 int tokenize_cmd(char ** token, char * cmd)
@@ -281,6 +322,64 @@ int fork_exec_out(char * binary, char ** args, int num_tokens, char * output)
 	while (wait(&_pid) > 0); //{ /* child process finished */ } 
 
 	return 1;
+}
+
+int fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2)
+{
+	char * envp[] = { 0 };
+	
+	int status;
+	int pid1, pid2;
+	int fd[2];
+
+	args1[0] = binary1;
+	args2[0] = binary2;
+
+	// int i = 0;
+ //    while(args1[i] != 0)
+ //    {
+ //    	printf("%d: %s\n", i, args1[i]);
+ //    	i++;
+ //    }
+
+ //    i = 0;
+ //    while(args2[i] != 0)
+ //    {
+ //    	printf("%d: %s\n", i, args2[i]);
+ //    	i++;
+ //    }
+
+	pipe(fd);
+
+    if((pid1 = fork()) == 0)
+    {
+        dup2(fd[1], 1);
+        close(fd[0]);
+        if(execve(args1[0], args1, envp) == -1)
+        {
+        	fprintf(stderr, "Error: execve 1 failed.\n");
+			exit(0);
+        }
+    }
+
+    if((pid2 = fork()) == 0)
+    {
+        dup2(fd[0], 0);
+        close(fd[1]);
+        if(execve(args2[0], args2, envp) == -1)
+        {
+        	fprintf(stderr, "Error: execve 2 failed.\n");
+			exit(0);
+        }
+    }
+
+    close(fd[0]);
+    close(fd[1]);
+
+    waitpid(pid1, &status, 0);
+    waitpid(pid2, &status, 0); 
+
+    return 1;
 }
 
 int find_binary(char * bin_name, char * fullpath)
