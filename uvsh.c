@@ -2,9 +2,9 @@
 
 Requirements: 	https://connex.csc.uvic.ca/access/content/attachment/9ad57451-aeeb-44ea-9900-3e4871d16fa4/Assignments/29d50c2c-9759-4035-a9f0-5694475f2278/2017_summer_a1_writeup.pdf
 
-Github Link: 	https://github.com/colemacdonald/shell
+Github Link: 	https://github.com/colemacdonald/rng-name-maker
 
-Created On: 	Wed May 24
+Created On: 	May 24, 2017
 By:				Cole Macdonald
 
 */
@@ -208,37 +208,17 @@ int run_pipe(char * cmd)
 
 	printf("%d\n", i);
 
-	char *token1[i];
-	char *token2[num_tokens - i + 1];
-
 	int j;
+	
+	char *token1[i];
 	for(j = 1; j < i; j++)
 		token1[j-1] = token[j];
 	token1[i - 1] = 0;
 
+	char *token2[num_tokens - i];
 	for(j = i + 1; j < num_tokens; j++)
 		token2[j - (i + 1)] = token[j];
-	token2[num_tokens - i] = 0;
-	
-	// int k = 0;
-	// while(k < num_tokens)
-	// {
-	// 	printf("%d: %s\n", k, token[k]);
-	// 	k++;
-	// }
-
-	// k = 0;
-	// while(token1[k] != 0)
-	// {
-	// 	printf("%d: %s\n", k, token1[k]);
-	// 	k++;
-	// }
-	// k = 0;
-	// while(token2[k] != 0)
-	// {
-	// 	printf("%d: %s\n", k, token2[k]);
-	// 	k++;
-	// }
+	token2[num_tokens - i - 1] = 0;
 
 	char binary1[MAX_LINE_LENGTH];
 	char binary2[MAX_LINE_LENGTH];
@@ -334,20 +314,6 @@ int fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2)
 
 	args1[0] = binary1;
 	args2[0] = binary2;
-
-	// int i = 0;
- //    while(args1[i] != 0)
- //    {
- //    	printf("%d: %s\n", i, args1[i]);
- //    	i++;
- //    }
-
- //    i = 0;
- //    while(args2[i] != 0)
- //    {
- //    	printf("%d: %s\n", i, args2[i]);
- //    	i++;
- //    }
 
 	pipe(fd);
 
