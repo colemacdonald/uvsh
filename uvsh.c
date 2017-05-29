@@ -206,8 +206,6 @@ int run_pipe(char * cmd)
 			break;
 	}
 
-	printf("%d\n", i);
-
 	int j;
 	
 	char *token1[i];
