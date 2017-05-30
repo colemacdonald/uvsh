@@ -41,13 +41,23 @@ int 		get_prompt(FILE * fp);
 int 		get_dirs(FILE * fp);
 void 		prompt_user(char * prompt);
 int 		read_user_input(char* input);
+
+/* Takes string cmd and determines whether it is a standard, 
+do-out, or do-pipe cmd and runs accordingly*/
 int 		run_cmd(char* cmd);
+/* Breaks cmd into words */
 int 		tokenize_cmd(char ** token, char * cmd);
+/* Spawns a new process and attempts to run binary with args */
 int 		fork_exec(char * binary, char ** args, int num_tokens);
+/* Spawns a new process and attempts to run binary with args, redirecting to output */
 int 		fork_exec_out(char * binary, char ** args, int num_tokens, char * output);
+/* Spawns a new process and attempts to pipe the output of binary 1 with args1 to binary2 with args 2 */
 int 		fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2);
+/* Called by run_cmd */
 int 		run_out(char * cmd);
+/* Called by run_cmd */
 int 		run_pipe(char * cmd);
+/* Determines if cmd exists, and saves the full path to the binary in fullpath */
 int 		find_binary(char * bin_name, char * fullpath);
 
 /*************************** IMPLEMENTATIONS ****************************/
@@ -241,6 +251,13 @@ int tokenize_cmd(char ** token, char * cmd)
 
     t = strtok(cmd, " ");
     while (t != NULL && num_tokens < MAX_NUM_ARGS) {
+    	if(strncmp(t, "~/", 2) == 0)
+    	{
+    		//char * tmp = t;
+    		char * tmp2 = getenv("HOME");
+    		printf("%s\n", tmp2);
+    	}
+
         token[num_tokens] = t;
         num_tokens++;
         t = strtok(NULL, " ");
