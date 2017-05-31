@@ -133,6 +133,9 @@ int read_user_input(char* input)
 
 int run_cmd(char* cmd)
 {
+	if(strcmp(cmd, "") == 0)
+		return 1;
+	
 	terminate_line(cmd);
 
 	if(strncmp(cmd, "do-pipe", 7) == 0)

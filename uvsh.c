@@ -133,6 +133,9 @@ int read_user_input(char* input)
 
 int run_cmd(char* cmd)
 {
+	if(strcmp(cmd, "") == 0)
+		return 1;
+
 	terminate_line(cmd);
 
 	if(strncmp(cmd, "do-pipe", 7) == 0)
@@ -282,8 +285,6 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, cwd);
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
-
-    		printf("%s\n", t);
     	}
 
         token[num_tokens] = t;
