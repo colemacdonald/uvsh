@@ -1,10 +1,10 @@
-/* uvsh.c
+/* uvshplus.c
 
 Requirements: 	https://connex.csc.uvic.ca/access/content/attachment/9ad57451-aeeb-44ea-9900-3e4871d16fa4/Assignments/29d50c2c-9759-4035-a9f0-5694475f2278/2017_summer_a1_writeup.pdf
 
 Github Link: 	https://github.com/colemacdonald/rng-name-maker
 
-Created On: 	May 24, 2017
+Created On: 	May 30, 2017
 By:				Cole Macdonald
 
 */
@@ -152,6 +152,12 @@ int run_std(char * cmd)
 {
 	char *token[MAX_NUM_ARGS];
 	int num_tokens = tokenize_cmd(token, cmd);
+
+	if(strcmp(token[0], "cd") == 0)
+	{
+		chdir(token[1]);
+		return 1;
+	}
 
 	char to_run[MAX_LINE_LENGTH];
 	to_run[0] = '\0';
