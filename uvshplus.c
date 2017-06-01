@@ -324,6 +324,7 @@ int tokenize_cmd(char ** token, char * cmd)
         token[num_tokens] = t;
         num_tokens++;
         t = strtok(NULL, " ");
+        printf("1: %s\n", t);
     }
 
     token[num_tokens] = NULL;
