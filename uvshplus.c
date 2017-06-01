@@ -328,10 +328,10 @@ int tokenize_cmd(char ** token, char * cmd)
     	}
     }
 
-    for(i = 0; i < num_tokens; i++)
-    {
-    	printf(": %s\n", token[i]);
-    }
+    // for(i = 0; i < num_tokens; i++)
+    // {
+    // 	printf(": %s\n", token[i]);
+    // }
 
     return num_tokens;
 }

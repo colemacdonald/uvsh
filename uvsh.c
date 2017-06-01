@@ -260,6 +260,18 @@ int tokenize_cmd(char ** token, char * cmd)
 
     t = strtok(cmd, " ");
     while (t != NULL && num_tokens < MAX_NUM_ARGS) {
+        token[num_tokens] = t;
+        t = strtok(NULL, " ");
+
+        num_tokens++;
+    }
+
+    token[num_tokens] = NULL;
+
+    int i;
+    for(i = 0; i < num_tokens; i++)
+    {
+    	char * t = token[i];
     	if(strncmp(t, "~", 1) == 0)
     	{
     		char tmp[strlen(t) + 1];
@@ -286,14 +298,7 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
     	}
-
-        token[num_tokens] = t;
-        num_tokens++;
-        t = strtok(NULL, " ");
     }
-
-    token[num_tokens] = NULL;
-
     return num_tokens;
 }
 
