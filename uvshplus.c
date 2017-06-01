@@ -195,8 +195,8 @@ int run_std(char * cmd)
 	} else
 	{
 		int i;
-		int pipe = 0;
-		int out = 0;
+		int pipe = -1;
+		int out = -1;
 		for(i = 0; i < num_tokens; i++)
 		{
 			if(strcmp(token[i], ">") == 0)
@@ -208,17 +208,17 @@ int run_std(char * cmd)
 			}
 		}
 
-		if(out != 0 && pipe == 0)
+		if(out != -1 && pipe == -1)
 		{
 			//basic output redirect
 			return do_out(token, num_tokens, 0, 2);
 		}
-		else if(out == 0 && pipe != 0)
+		else if(out == -1 && pipe != -1)
 		{
 			//basic pipe
 			return do_pipe(token, num_tokens, 0, pipe);
 		}
-		else if(out != 0 && pipe != 0)
+		else if(out != -1 && pipe != -1)
 		{
 			//combined pipe and output redirect
 			if(out < pipe)
@@ -563,6 +563,17 @@ int do_out(char ** token, int num_tokens, int i_start, int less_args)
 int do_pipe(char ** token, int num_tokens, int j_start, int skip)
 {
 	int j;
+
+	if(skip == j_start)
+	{
+		fprintf(stderr, "Missing command before pipe.\n");
+		return 0;
+	}
+	else if(skip == num_tokens - 1)
+	{
+		fprintf(stderr, "Missing command after pipe.\n");
+		return 0;
+	}
 	
 	char *token1[skip];
 	for(j = j_start; j < skip; j++)
@@ -580,9 +591,14 @@ int do_pipe(char ** token, int num_tokens, int j_start, int skip)
 	int found_binary1 = find_binary(token1[0], binary1);
 	int found_binary2 = find_binary(token2[0], binary2);
 
-	if(!found_binary1 || !found_binary2)
+	if(!found_binary1)
 	{
-		fprintf(stderr, "Invalid command.");
+		fprintf(stderr, "Invalid command before pipe.\n");
+		return 0;
+	}
+	else if(!found_binary2)
+	{
+		fprintf(stderr, "Invalid command after pipe.\n");
 		return 0;
 	}
 
@@ -600,10 +616,19 @@ int do_pipe_out(char ** token, int num_tokens, int pipe, int out)
 	int found_binary1 = find_binary(token[0], binary1);
 	int found_binary2 = find_binary(token[pipe + 1], binary2);
 
-	if(!found_binary1 || !found_binary2)
+	if(!found_binary1)
 	{
-		fprintf(stderr, "Invalid command.");
+		fprintf(stderr, "Invalid command before pipe.\n");
 		return 0;
+	}
+	else if(!found_binary2)
+	{
+		fprintf(stderr, "Invalid command after pipe.\n");
+		return 0;
+	}
+	else if(out == num_tokens - 1)
+	{
+		fprintf(stderr, "Missing output file.\n");
 	}
 	return fork_exec_pipe_out(binary1, token, binary2, &token[pipe + 1], token[num_tokens - 1]);
 }

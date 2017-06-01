@@ -226,6 +226,17 @@ int run_pipe(char * cmd)
 			break;
 	}
 
+	if(i == 1)
+	{
+		fprintf(stderr, "Missing command before pipe.\n");
+		return 0;
+	}
+	else if(i == num_tokens - 1)
+	{
+		fprintf(stderr, "Missing command after pipe.\n");
+		return 0;
+	}
+
 	int j;
 	
 	char *token1[i];
@@ -244,9 +255,14 @@ int run_pipe(char * cmd)
 	int found_binary1 = find_binary(token1[0], binary1);
 	int found_binary2 = find_binary(token2[0], binary2);
 
-	if(!found_binary1 || !found_binary2)
+	if(!found_binary1)
 	{
-		fprintf(stderr, "Invalid command.");
+		fprintf(stderr, "Invalid command before pipe.");
+		return 0;
+	}
+	else if(!found_binary2)
+	{
+		fprintf(stderr, "Invalid command after pipe.");
 		return 0;
 	}
 
