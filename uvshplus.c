@@ -188,12 +188,6 @@ int run_std(char * cmd)
 	char *token[MAX_NUM_ARGS];
 	int num_tokens = tokenize_cmd(token, cmd);
 
-	int x;
-	for (x = 0; x < num_tokens; x++)
-	{
-		printf("2: %s\n", token[x]);
-	}
-
 	if(strcmp(token[0], "cd") == 0)
 	{
 		chdir(token[1]);
@@ -331,7 +325,6 @@ int tokenize_cmd(char ** token, char * cmd)
     }
 
     token[num_tokens] = NULL;
-    printf(": %d: %s\n", num_tokens, token[num_tokens]);
 
     return num_tokens;
 }
@@ -344,10 +337,6 @@ int fork_exec(char * binary, char ** args, int num_tokens)
 	{
 		args[0] = binary;
 		args[num_tokens] = 0;
-
-		int i;
-		for(i = 0; i < num_tokens; i++)
-			printf(": %s\n", args[i]);
 
 		if(execve(args[0], args, envp) == -1)
 		{
