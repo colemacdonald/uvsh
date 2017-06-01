@@ -288,6 +288,45 @@ int tokenize_cmd(char ** token, char * cmd)
 
     t = strtok(cmd, " ");
     while (t != NULL && num_tokens < MAX_NUM_ARGS) {
+    	// if(strncmp(t, "~", 1) == 0)
+    	// {
+    	// 	char tmp[strlen(t) + 1];
+    	// 	memcpy(tmp, t, strlen(t));
+    	// 	tmp[strlen(t)] = '\0';
+
+    	// 	t[0] = '\0';
+    	// 	strcat(t, getenv("HOME"));
+    	// 	strcat(t, &tmp[1]);
+    	// 	strcat(t, "\0");
+    	// }
+    	// else if(strncmp(t, "./", 2) == 0)
+    	// {
+    	// 	char tmp[strlen(t) + 1];
+    	// 	memcpy(tmp, t, strlen(t));
+    	// 	tmp[strlen(t)] = '\0';
+
+    	// 	// https://stackoverflow.com/questions/298510/how-to-get-the-current-directory-in-a-c-program
+    	// 	char cwd[1024];
+    	// 	getcwd(cwd, sizeof(cwd));
+
+    	// 	t[0] = '\0';
+    	// 	strcat(t, cwd);
+    	// 	strcat(t, &tmp[1]);
+    	// 	strcat(t, "\0");
+    	// }
+
+        token[num_tokens] = t;
+        t = strtok(NULL, " ");
+
+        num_tokens++;
+    }
+
+    token[num_tokens] = NULL;
+
+    int i;
+    for(i = 0; i < num_tokens; i++)
+    {
+    	char * t = token[i];
     	if(strncmp(t, "~", 1) == 0)
     	{
     		char tmp[strlen(t) + 1];
@@ -314,17 +353,7 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
     	}
-
-        token[num_tokens] = t;
-        t = strtok(NULL, " ");
-        // if(t == NULL)
-        // {
-        // 	break;
-        // }
-        num_tokens++;
     }
-
-    token[num_tokens] = NULL;
 
     return num_tokens;
 }
