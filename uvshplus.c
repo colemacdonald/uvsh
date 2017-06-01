@@ -345,10 +345,6 @@ int fork_exec(char * binary, char ** args, int num_tokens)
 		args[0] = binary;
 		args[num_tokens] = 0;
 
-		int i;
-		for(i = 0; i < num_tokens; i++)
-			printf(": %s\n", args[i]);
-
 		if(execve(args[0], args, envp) == -1)
 		{
 			fprintf(stderr, "Error: execve failed.\n");
