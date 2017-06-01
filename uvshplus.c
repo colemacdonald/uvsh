@@ -317,10 +317,10 @@ int tokenize_cmd(char ** token, char * cmd)
 
         token[num_tokens] = t;
         t = strtok(NULL, " ");
-        if(t == NULL)
-        {
-        	break;
-        }
+        // if(t == NULL)
+        // {
+        // 	break;
+        // }
         num_tokens++;
     }
 
