@@ -1,0 +1,21 @@
+total 240
+drwxr-xr-x  20 colemacdonald  staff    680 May 30 18:13 .
+drwxr-xr-x   5 colemacdonald  staff    170 May 25 10:03 ..
+drwxr-xr-x  16 colemacdonald  staff    544 May 30 17:56 .git
+-rw-r--r--@  1 colemacdonald  staff     32 May 30 17:56 .uvshrc
+-rw-r--r--   1 colemacdonald  staff      7 May 25 10:03 README.md
+-rwxr-xr-x   1 colemacdonald  staff   8884 May 29 10:44 a.out
+-rwxr-xr-x   1 colemacdonald  staff   8744 May 30 17:20 appa
+-rw-r--r--   1 colemacdonald  staff    809 May 25 11:09 appendix_a.c
+-rw-r--r--   1 colemacdonald  staff    753 May 26 13:03 appendix_b.c
+-rw-r--r--   1 colemacdonald  staff   1864 May 25 11:09 appendix_c.c
+-rw-r--r--   1 colemacdonald  staff   2379 May 25 11:09 appendix_d.c
+-rw-r--r--   1 colemacdonald  staff   1923 May 26 12:29 appendix_e.c
+-rw-r--r--@  1 colemacdonald  staff     89 May 30 17:50 makefile
+-rw-------   1 colemacdonald  staff      0 May 30 18:13 ooot.txt
+-rw-------   1 colemacdonald  staff    158 May 30 17:37 ou2.txt
+-rw-------   1 colemacdonald  staff    122 May 27 15:34 out.txt
+-rwxr-xr-x   1 colemacdonald  staff  14744 May 30 17:55 uvsh
+-rw-r--r--@  1 colemacdonald  staff   8928 May 30 17:55 uvsh.c
+-rwxr-xr-x   1 colemacdonald  staff  14840 May 30 18:02 uvshp
+-rw-r--r--@  1 colemacdonald  staff   9165 May 30 18:01 uvshplus.c

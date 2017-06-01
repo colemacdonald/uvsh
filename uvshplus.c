@@ -2,6 +2,15 @@
 
 Requirements: 	https://connex.csc.uvic.ca/access/content/attachment/9ad57451-aeeb-44ea-9900-3e4871d16fa4/Assignments/29d50c2c-9759-4035-a9f0-5694475f2278/2017_summer_a1_writeup.pdf
 
+Additional Features Added:
+	- implemented cd command
+		- can change working directory and displays current working directory before prompt
+	- bash piping and output
+		- can use | to pipe between 2 commands and > to redirect cmd preceding to file after
+	- pipe and output chaining
+		- use syntax: <cmd1> <args1> | <cmd2> <args2> > <output-file>
+		- send output of cmd1 to cmd2 as input and save output of cmd2 to a file
+
 Github Link: 	https://github.com/colemacdonald/rng-name-maker
 
 Created On: 	May 30, 2017
@@ -42,6 +51,8 @@ int 		get_dirs(FILE * fp);
 void 		prompt_user(char * prompt);
 int 		read_user_input(char* input);
 
+/* Prints help information */
+void 		print_help();
 /* Takes string cmd and determines whether it is a standard, 
 do-out, or do-pipe cmd and runs accordingly*/
 int 		run_cmd(char* cmd);
@@ -53,6 +64,8 @@ int 		fork_exec(char * binary, char ** args, int num_tokens);
 int 		fork_exec_out(char * binary, char ** args, int num_tokens, char * output);
 /* Spawns a new process and attempts to pipe the output of binary 1 with args1 to binary2 with args 2 */
 int 		fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2);
+/* Spawns a new process and attempts to pipe the output of binary1 w/ args1 to binary2 w/ args2, redirecting to output */
+int 		fork_exec_pipe_out(char * binary1, char ** args1, char * binary2, char ** args2, char * output);
 /* Called by run_cmd */
 int 		run_std(char * cmd);
 /* Called by run_cmd */
@@ -61,7 +74,12 @@ int 		run_out(char * cmd);
 int 		run_pipe(char * cmd);
 /* Determines if cmd exists, and saves the full path to the binary in fullpath */
 int 		find_binary(char * bin_name, char * fullpath);
-
+/* Made for handling different output redirection syntax */
+int 		do_out(char ** token, int num_tokens, int i_start, int less_args);
+/* Made for handling different pipe syntax */
+int 		do_pipe(char ** token, int num_tokens, int j_start, int skip);
+/* Seperates commands for piping and output redirection and makes call to fork_exec_pipe_out */
+int 		do_pipe_out(char ** token, int num_tokens, int pipe, int out);
 /*************************** IMPLEMENTATIONS ****************************/
 
 // HELPERS
@@ -74,6 +92,11 @@ void terminate_line(char * str)
 }
 
 // END HELPERS
+
+void print_help()
+{
+	printf("Welcome to uvshplus as developed by Cole Macdonald!\nBasic syntax is as follows:\n\tRunning a standard command:\n\t\t<cmd1> <args1>\n\tPiping:\n\t\tdo-pipe <cmd1> <args1> :: <cmd2> <args2>\n\t\t\tOR\n\t\t<cmd1> <args1> | <cmd2> <args2>\n\tOutput Redirection:\n\t\tdo-out <cmd> <args> :: <output-file>\n\t\t\tOR\n\t\t<cmd> > <output-file>\n\tPiping and Redirection:\n\t\t<cmd1> <args1> | <cmd2> <args2> > <output-file>\nGood luck!!\n");
+}
 
 int read_config()
 {
@@ -114,7 +137,11 @@ int get_dirs(FILE * fp)
 
 void prompt_user(char * prompt)
 {
-	fprintf(stdout, "%s ", prompt);
+	// https://stackoverflow.com/questions/298510/how-to-get-the-current-directory-in-a-c-program
+	char cwd[1024];
+	getcwd(cwd, sizeof(cwd));
+
+	fprintf(stdout, "%s %s ", strrchr(cwd, '/'), prompt);
 	fflush(stdout);
 }
 
@@ -135,7 +162,12 @@ int run_cmd(char* cmd)
 {
 	if(strcmp(cmd, "") == 0)
 		return 1;
-	
+	else if(strcmp(cmd, "help") == 0)
+	{
+		print_help();
+		return 1;
+	}
+
 	terminate_line(cmd);
 
 	if(strncmp(cmd, "do-pipe", 7) == 0)
@@ -160,6 +192,42 @@ int run_std(char * cmd)
 	{
 		chdir(token[1]);
 		return 1;
+	} else
+	{
+		int i;
+		int pipe = 0;
+		int out = 0;
+		for(i = 0; i < num_tokens; i++)
+		{
+			if(strcmp(token[i], ">") == 0)
+			{
+				out = i;
+			} else if(strcmp(token[i], "|") == 0)
+			{
+				pipe = i;
+			}
+		}
+
+		if(out != 0 && pipe == 0)
+		{
+			//basic output redirect
+			return do_out(token, num_tokens, 0, 2);
+		}
+		else if(out == 0 && pipe != 0)
+		{
+			//basic pipe
+			return do_pipe(token, num_tokens, 0, pipe);
+		}
+		else if(out != 0 && pipe != 0)
+		{
+			//combined pipe and output redirect
+			if(out < pipe)
+			{
+				fprintf(stderr, "Invalid command. Pipe (|) must come before redirection (>).\n");
+				return 0;
+			}
+			return do_pipe_out(token, num_tokens, pipe, out);
+		}
 	}
 
 	char to_run[MAX_LINE_LENGTH];
@@ -185,38 +253,13 @@ int run_out(char * cmd)
 	char *token[MAX_NUM_ARGS];
 	int num_tokens = tokenize_cmd(token, cmd);
 
-	char to_run[MAX_LINE_LENGTH];
-	to_run[0] = '\0';
-
 	if(strcmp(token[num_tokens - 2], "::") != 0 || num_tokens < 4)
 	{
 		fprintf(stderr, "Incorrect syntax. Called as follows:\ndo-out <cmd1> :: <output-file>\n");
 		return 0;
 	}
 
-	char * token1[num_tokens - 2];
-	int i;
-	for(i = 1; i < num_tokens - 2; i++)
-	{
-		token1[i - 1] = token[i];
-	}
-	token1[num_tokens - 3] = NULL;
-
-	char * output = token[num_tokens - 1];
-	num_tokens -= 3;
-
-	int found_binary = find_binary(token1[0], to_run);
-	if(found_binary)
-	{
-		fork_exec_out(to_run, token1, num_tokens, output);
-		return 1;
-	}
-	else
-	{
-		fprintf(stderr, "Invalid command.\n");
-		return 0;
-	}
-	return 1;
+	return do_out(token, num_tokens, 1, 3);
 }
 
 int run_pipe(char * cmd)
@@ -232,31 +275,10 @@ int run_pipe(char * cmd)
 			break;
 	}
 
-	int j;
-	
-	char *token1[i];
-	for(j = 1; j < i; j++)
-		token1[j-1] = token[j];
-	token1[i - 1] = 0;
-
-	char *token2[num_tokens - i];
-	for(j = i + 1; j < num_tokens; j++)
-		token2[j - (i + 1)] = token[j];
-	token2[num_tokens - i - 1] = 0;
-
-	char binary1[MAX_LINE_LENGTH];
-	char binary2[MAX_LINE_LENGTH];
-
-	int found_binary1 = find_binary(token1[0], binary1);
-	int found_binary2 = find_binary(token2[0], binary2);
-
-	if(!found_binary1 || !found_binary2)
-	{
-		fprintf(stderr, "Invalid command.");
+	if(i > num_tokens - 1)
 		return 0;
-	}
 
-	return fork_exec_pipe(binary1, token1, binary2, token2);
+	return do_pipe(token, num_tokens, 1, i);
 }
 
 int tokenize_cmd(char ** token, char * cmd)
@@ -291,8 +313,6 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, cwd);
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
-
-    		printf("%s\n", t);
     	}
 
         token[num_tokens] = t;
@@ -401,6 +421,67 @@ int fork_exec_pipe(char * binary1, char ** args1, char * binary2, char ** args2)
     return 1;
 }
 
+int fork_exec_pipe_out(char * binary1, char ** args1, char * binary2, char ** args2, char * output)
+{
+	char * envp[] = { 0 };
+	
+	int status;
+	int pid1, pid2;
+	int fd[2];
+
+	args1[0] = binary1;
+	args2[0] = binary2;
+
+	pipe(fd);
+
+    if((pid1 = fork()) == 0)
+    {
+        dup2(fd[1], 1);
+        close(fd[0]);
+        if(execve(args1[0], args1, envp) == -1)
+        {
+        	fprintf(stderr, "Error: execve 1 failed.\n");
+			exit(0);
+        }
+    }
+
+    if((pid2 = fork()) == 0)
+    {
+        dup2(fd[0], 0);
+        close(fd[1]);
+
+        int fdout;
+		fdout = open(output, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+		if(!fdout)
+		{
+			fprintf(stderr, "Cannot open output file for writing.\n");
+			return 0;
+		}
+
+		// redirect stdout and stderr respectively
+		dup2(fdout, 1);
+		dup2(fdout, 2);
+
+		args2[0] = binary2;
+		//args[num_tokens] = 0;
+
+        if(execve(args2[0], args2, envp) == -1)
+        {
+        	fprintf(stderr, "Error: execve 2 failed.\n");
+			exit(0);
+        }
+    }
+
+    close(fd[0]);
+    close(fd[1]);
+
+    waitpid(pid1, &status, 0);
+    waitpid(pid2, &status, 0); 
+
+    //out
+	return 1;
+}
+
 int find_binary(char * bin_name, char * fullpath)
 {
 	int i = 0;
@@ -436,6 +517,84 @@ int find_binary(char * bin_name, char * fullpath)
 	}
 	memcpy(fullpath, "\0", 1);
 	return 0;
+}
+
+int do_out(char ** token, int num_tokens, int i_start, int less_args)
+{
+	char to_run[MAX_LINE_LENGTH];
+	to_run[0] = '\0';
+	char * token1[num_tokens - less_args];
+	int i;
+
+	for(i = i_start; i < num_tokens - 2; i++)
+	{
+		token1[i - i_start] = token[i];
+	}
+	token1[num_tokens - less_args] = NULL;
+
+	char * output = token[num_tokens - 1];
+	num_tokens -= less_args;
+
+	int found_binary = find_binary(token1[0], to_run);
+	if(found_binary)
+	{
+		fork_exec_out(to_run, token1, num_tokens, output);
+		return 1;
+	}
+	else
+	{
+		fprintf(stderr, "Invalid command.\n");
+		return 0;
+	}
+	return 1;
+}
+
+int do_pipe(char ** token, int num_tokens, int j_start, int skip)
+{
+	int j;
+	
+	char *token1[skip];
+	for(j = j_start; j < skip; j++)
+		token1[j - j_start] = token[j];
+	token1[skip - j_start] = 0;
+
+	char *token2[num_tokens - skip];
+	for(j = skip + 1; j < num_tokens; j++)
+		token2[j - (skip + 1)] = token[j];
+	token2[num_tokens - skip - 1] = 0;
+
+	char binary1[MAX_LINE_LENGTH];
+	char binary2[MAX_LINE_LENGTH];
+
+	int found_binary1 = find_binary(token1[0], binary1);
+	int found_binary2 = find_binary(token2[0], binary2);
+
+	if(!found_binary1 || !found_binary2)
+	{
+		fprintf(stderr, "Invalid command.");
+		return 0;
+	}
+
+	return fork_exec_pipe(binary1, token1, binary2, token2);
+}
+
+int do_pipe_out(char ** token, int num_tokens, int pipe, int out)
+{
+	token[pipe] = NULL;
+	token[out] = NULL;
+
+	char binary1[MAX_LINE_LENGTH];
+	char binary2[MAX_LINE_LENGTH];
+
+	int found_binary1 = find_binary(token[0], binary1);
+	int found_binary2 = find_binary(token[pipe + 1], binary2);
+
+	if(!found_binary1 || !found_binary2)
+	{
+		fprintf(stderr, "Invalid command.");
+		return 0;
+	}
+	return fork_exec_pipe_out(binary1, token, binary2, &token[pipe + 1], token[num_tokens - 1]);
 }
 
 /********************************* MAIN *********************************/
