@@ -329,7 +329,7 @@ int tokenize_cmd(char ** token, char * cmd)
         	printf("dd %d\n", num_tokens);
         	break;
         }
-        printf("1: %s\n", t);
+        printf("%d: %s\n",num_tokens, t);
     }
 
     token[num_tokens] = NULL;
