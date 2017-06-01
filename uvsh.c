@@ -257,12 +257,12 @@ int run_pipe(char * cmd)
 
 	if(!found_binary1)
 	{
-		fprintf(stderr, "Invalid command before pipe.");
+		fprintf(stderr, "Invalid command before pipe.\n");
 		return 0;
 	}
 	else if(!found_binary2)
 	{
-		fprintf(stderr, "Invalid command after pipe.");
+		fprintf(stderr, "Invalid command after pipe.\n");
 		return 0;
 	}
 
