@@ -311,7 +311,7 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
     	}
-    	else if(strncmp(t, "./", 2) == 0)
+    	else if(0/*strncmp(t, "./", 2) == 0*/)
     	{
     		char tmp[strlen(t) + 1];
     		memcpy(tmp, t, strlen(t));
