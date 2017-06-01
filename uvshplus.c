@@ -188,6 +188,12 @@ int run_std(char * cmd)
 	char *token[MAX_NUM_ARGS];
 	int num_tokens = tokenize_cmd(token, cmd);
 
+	int x;
+	for (x = 0; x < num_tokens; x++)
+	{
+		printf("2: %s\n", token[x]);
+	}
+
 	if(strcmp(token[0], "cd") == 0)
 	{
 		chdir(token[1]);
@@ -298,7 +304,6 @@ int tokenize_cmd(char ** token, char * cmd)
     		strcat(t, getenv("HOME"));
     		strcat(t, &tmp[1]);
     		strcat(t, "\0");
-    		printf("1: %s\n", t);
     	}
     	else if(strncmp(t, "./", 2) == 0)
     	{
